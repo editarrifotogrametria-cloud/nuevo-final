@@ -37,21 +37,32 @@ def start_services():
     processes.append(("Smart Processor", proc1))
     time.sleep(2)
 
-    # 2. Web Server
-    print("2️⃣  Iniciando Web Server...")
+    # 2. Web App (Interfaz Vue.js completa)
+    print("2️⃣  Iniciando Web Application...")
     proc2 = subprocess.Popen(
-        [sys.executable, "gps_server.py"],
+        [sys.executable, "web_app_server.py"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-    processes.append(("Web Server", proc2))
+    processes.append(("Web Application", proc2))
+    time.sleep(2)
+
+    # 3. API Server (Opcional - APIs adicionales)
+    print("3️⃣  Iniciando API Server...")
+    proc3 = subprocess.Popen(
+        [sys.executable, "gps_server_enhanced.py"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    processes.append(("API Server", proc3))
     time.sleep(2)
 
     print("=" * 60)
     print("✅ Servicios iniciados")
     print("")
-    print("Accede a:")
-    print("  http://localhost:5000")
+    print("📱 Interfaces disponibles:")
+    print("  🌟 Aplicación Web:    http://localhost:8000")
+    print("  📊 Dashboard & API:   http://localhost:5000")
     print("")
     print("Presiona Ctrl+C para detener")
     print("=" * 60)

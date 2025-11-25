@@ -9,3 +9,4 @@ numpy>=1.21.0
 eventlet>=0.33.0
 gevent>=21.0.0
 gevent-websocket>=0.10.0
+werkzeug>=2.0.0
