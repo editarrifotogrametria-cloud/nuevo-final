@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+        <link rel="icon" href="/../static/favicon.png" type="image/x-icon">
+        <link rel="shortcut icon" href="/../static/favicon.png" type="image/x-icon">
+        <link rel="apple-touch-icon" sizes="180x180" href="/../static/favicon/apple-touch-icon.png">
+        <link rel="mask-icon" href="/../static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+        <title>Reach Panel</title>
+        <script defer="defer" src="/../static/js/chunk-vendors.31517009.js"></script>
+        <script defer="defer" src="/../static/js/chunk-common.22a6f926.js"></script>
+        <script defer="defer" src="/../static/js/index.0bca27f0.js"></script>
+        <link href="/../static/css/chunk-vendors.d93e9d9a.css" rel="stylesheet">
+        <link href="/../static/css/index.8349ed33.css" rel="stylesheet">
+    </head>
+    <body>
+        <noscript>
+            <strong>We're sorry but Reach Panel doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+        </noscript>
+        <input type="hidden" id="currentDevice" value="ReachRS3" v-pre data-ip="">
+        <div id="app"></div>
+    </body>
+</html>
