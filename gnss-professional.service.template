@@ -1,0 +1,18 @@
+[Unit]
+Description=GNSS Professional - Sistema Completo
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={user}
+WorkingDirectory={workdir}
+Environment="PATH={venv_path}/bin"
+ExecStart={venv_path}/bin/python3 {workdir}/gnss_professional.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
