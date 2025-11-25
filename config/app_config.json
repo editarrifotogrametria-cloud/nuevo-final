@@ -1,0 +1,50 @@
+{
+  "app": {
+    "name": "GNSS Professional",
+    "version": "1.0.0",
+    "debug": false
+  },
+  "serial": {
+    "port": "/dev/serial0",
+    "baudrate": 115200,
+    "timeout": 1
+  },
+  "web": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "secret_key": "change-this-secret-key-in-production"
+  },
+  "gnss": {
+    "receiver_model": "ComNav K222",
+    "default_datum": "WGS84",
+    "elevation_mask": 10,
+    "systems": ["GPS", "GLONASS", "Galileo", "BeiDou"]
+  },
+  "tilt": {
+    "enabled": false,
+    "default_pole_height": 2.0,
+    "auto_calibrate": false
+  },
+  "ml": {
+    "enabled": true,
+    "model_type": "hybrid",
+    "log_stats_interval": 30
+  },
+  "bluetooth": {
+    "enabled": true,
+    "service_name": "GNSS-AI",
+    "service_uuid": "00001101-0000-1000-8000-00805F9B34FB"
+  },
+  "data": {
+    "base_dir": "data",
+    "auto_backup": true,
+    "backup_interval_hours": 24
+  },
+  "logging": {
+    "level": "INFO",
+    "log_to_file": true,
+    "log_file": "data/logs/gnss_professional.log",
+    "max_log_size_mb": 10,
+    "backup_count": 5
+  }
+}

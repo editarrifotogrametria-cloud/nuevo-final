@@ -21,15 +21,12 @@ import serial  # pyserial
 ML_AVAILABLE = False
 GNSSClassifier = None
 try:
-    from gnss_ml_classifier import GNSS_ML_Classifier as GNSSClassifier
+    from ml_classifier import SignalClassifier as GNSSClassifier
     ML_AVAILABLE = True
 except ImportError:
-    try:
-        from ml_classifier import GNSS_ML_Classifier as GNSSClassifier
-        ML_AVAILABLE = True
-    except ImportError:
-        print("⚠️  ML Classifier no disponible, continuaré sin ML.")
-        ML_AVAILABLE = False
+    print("⚠️  ML Classifier no disponible, continuaré sin ML.")
+    ML_AVAILABLE = False
+    GNSSClassifier = None
 
 
 class SmartProcessor:
@@ -86,7 +83,7 @@ class SmartProcessor:
         if self.ml_enabled and GNSSClassifier is not None:
             try:
                 print("🧠 Inicializando clasificador ML...")
-                self.classifier = GNSSClassifier(model="hybrid")
+                self.classifier = GNSSClassifier(model_type="hybrid")
                 print("   ✅ ML listo.")
             except Exception as e:
                 print(f"⚠️  Error iniciando ML: {e}")
@@ -488,10 +485,11 @@ class SmartProcessor:
             self.parse_nmea_gsv(line)
             if self.ml_enabled and self.classifier:
                 try:
-                    result = self.classifier.process_gsv(line)
-                    if result:
+                    # Clasificar satélites actuales
+                    classifications = self.classifier.classify_signals(self.satellites_detail)
+                    if classifications:
                         self.stats["ml_corrections"] += 1
-                except Exception:
+                except Exception as e:
                     pass
 
         # TILT
