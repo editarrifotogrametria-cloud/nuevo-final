@@ -1,0 +1,87 @@
+================================================================================
+🛰️  GNSS APP - ESTRUCTURA DEL PROYECTO
+================================================================================
+
+📦 gnss-app-clean/ (4.5 MB - 27 archivos)
+│
+├── 📄 ARCHIVOS PRINCIPALES
+│   ├── quick_start.py ⭐ <- INICIAR AQUÍ
+│   ├── web_app_server.py
+│   ├── smart_processor.py
+│   ├── comnav_controller.py
+│   ├── ntrip_client.py
+│   ├── ml_classifier.py
+│   ├── project_manager.py
+│   └── verify_system.py
+│
+├── 🌐 INTERFAZ WEB
+│   └── html.html (Aplicación Vue.js - 66 KB)
+│
+├── 📁 STATIC (4.1 MB)
+│   ├── js/ (5 archivos - 3.3 MB)
+│   │   ├── chunk-vendors.31517009.js (2.7 MB)
+│   │   ├── chunk-common.22a6f926.js (289 KB)
+│   │   ├── index.0bca27f0.js (304 KB)
+│   │   ├── 42.59f2d0b4.js
+│   │   └── 90.d65a0de5.js
+│   │
+│   ├── css/ (3 archivos - 780 KB)
+│   │   ├── chunk-vendors.d93e9d9a.css (748 KB)
+│   │   ├── index.8349ed33.css (25 KB)
+│   │   └── 90.88d412b8.css (5 KB)
+│   │
+│   └── fonts/
+│       └── Inter-Bold.579e0f95.woff2
+│
+├── ⚙️  CONFIG
+│   ├── ntrip.json
+│   ├── app_config.json
+│   └── README.md
+│
+├── 📚 DOCUMENTACIÓN
+│   ├── README.md
+│   ├── EMLID_INTERFACE.md
+│   ├── SISTEMA_LISTO.md
+│   └── ESTRUCTURA.txt (este archivo)
+│
+└── 🔧 INSTALACIÓN
+    ├── install.sh
+    ├── requirements.txt
+    └── .gitignore
+
+================================================================================
+🚀 INICIO RÁPIDO
+================================================================================
+
+1️⃣  Verificar:
+   python3 verify_system.py
+
+2️⃣  Instalar (en Raspberry Pi Zero 2W):
+   chmod +x install.sh
+   sudo ./install.sh
+   sudo reboot
+
+3️⃣  Iniciar:
+   python3 quick_start.py
+
+4️⃣  Acceder:
+   http://localhost:8000
+
+================================================================================
+📊 ESTADÍSTICAS
+================================================================================
+
+Archivos Python:     8
+Archivos JavaScript: 5
+Archivos CSS:        3
+Archivos HTML:       1
+Archivos JSON:       2
+Archivos Markdown:   4
+Archivos Shell:      1
+Total archivos:      27
+Tamaño total:        4.5 MB
+
+================================================================================
+✅ SISTEMA COMPLETO Y LISTO PARA USAR
+================================================================================
+
