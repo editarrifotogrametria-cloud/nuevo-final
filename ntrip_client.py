@@ -42,6 +42,7 @@ class NTRIPClient:
         self.connected = False
         self.socket = None
         self.serial = None
+        self.initial_buffer = b''
 
         # Estadísticas
         self.stats = {
@@ -182,16 +183,26 @@ class NTRIPClient:
             # Enviar request
             self.socket.sendall(request.encode())
 
-            # Leer respuesta
-            response = self.socket.recv(1024).decode('ascii', errors='ignore')
+            # Leer respuesta completa hasta fin de headers
+            response_bytes = b''
+            while b"\r\n\r\n" not in response_bytes:
+                chunk = self.socket.recv(4096)
+                if not chunk:
+                    break
+                response_bytes += chunk
 
-            if 'ICY 200 OK' in response or 'HTTP/1.1 200 OK' in response:
+            header_split = response_bytes.split(b"\r\n\r\n", 1)
+
+            header_text = header_split[0].decode('ascii', errors='ignore') if header_split else ''
+            self.initial_buffer = header_split[1] if len(header_split) > 1 else b''
+
+            if 'ICY 200 OK' in header_text or 'HTTP/1.1 200 OK' in header_text:
                 self.connected = True
                 self.stats['connection_time'] = time.time()
                 self.logger.info(f"✓ Conectado a mountpoint: {mountpoint}")
                 return True
             else:
-                self.logger.error(f"Error de conexión: {response}")
+                self.logger.error(f"Error de conexión: {header_text}")
                 return False
 
         except Exception as e:
@@ -236,7 +247,14 @@ class NTRIPClient:
 
     def receive_rtcm_loop(self):
         """Thread que recibe y reenvía datos RTCM"""
-        buffer = b''
+        buffer = self.initial_buffer or b''
+        self.initial_buffer = b''
+
+        if buffer:
+            self.stats['bytes_received'] += len(buffer)
+            if self.serial and self.serial.is_open:
+                self.serial.write(buffer)
+                self.stats['bytes_sent'] += len(buffer)
 
         while self.running and self.connected:
             try:

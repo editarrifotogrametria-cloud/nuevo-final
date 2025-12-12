@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "host": "rtk2go.com",
+  "port": 2101,
+  "mountpoint": "YOUR_MOUNTPOINT",
+  "username": "your_email@example.com",
+  "password": "",
+  "gga_interval": 5,
+  "serial_port": "/dev/serial0",
+  "serial_baud": 115200,
+  "reconnect_delay": 10
+}
