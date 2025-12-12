@@ -12,7 +12,17 @@ dist/
 build/
 
 # Data directories
-data/
+data/*
+!data/.gitkeep
+!data/projects/
+data/projects/*
+!data/projects/.gitkeep
+!data/points/
+data/points/*
+!data/points/.gitkeep
+!data/logs/
+data/logs/*
+!data/logs/.gitkeep
 ml_training_data/
 *.csv
 *.dxf
@@ -22,6 +32,8 @@ ml_training_data/
 # Logs
 *.log
 logs/
+!data/logs/
+!data/logs/.gitkeep
 
 # Configuration with sensitive data
 config/ntrip.json
