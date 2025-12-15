@@ -1,0 +1,68 @@
+{
+  "version": "1.0",
+  "device": {
+    "name": "MINI-CONTROLADOR",
+    "serial": "MC-20250101-001",
+    "timezone": "America/Santiago",
+    "language": "es"
+  },
+  "gnss": {
+    "port": "/dev/ttyS0",
+    "baudrate": 115200,
+    "update_rate_hz": 5,
+    "elevation_mask_degrees": 10,
+    "pdop_mask": 10.0,
+    "enabled_constellations": {
+      "gps": true,
+      "glonass": true,
+      "galileo": true,
+      "beidou": true,
+      "qzss": false
+    },
+    "nmea_output": {
+      "gga": true,
+      "rmc": true,
+      "gsa": true,
+      "gsv": true,
+      "vtg": true,
+      "zda": true
+    }
+  },
+  "ntrip": {
+    "enabled": false,
+    "host": "rtk2go.com",
+    "port": 2101,
+    "mountpoint": "",
+    "username": "",
+    "password": "",
+    "gga_interval_seconds": 5,
+    "reconnect_delay_seconds": 10,
+    "timeout_seconds": 30
+  },
+  "web": {
+    "port": 8080,
+    "host": "0.0.0.0",
+    "websocket_update_rate_hz": 5,
+    "cors_enabled": true,
+    "allowed_origins": ["*"]
+  },
+  "ble": {
+    "enabled": true,
+    "advertising_interval_ms": 1000,
+    "device_name": "MINI-CONTROLADOR",
+    "tx_power": 0
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "/var/log/mini-controlador/app.log",
+    "max_size_mb": 10,
+    "backup_count": 5,
+    "console_output": true
+  },
+  "data": {
+    "auto_save": true,
+    "save_interval_seconds": 60,
+    "history_max_points": 1000,
+    "database_path": "/var/lib/mini-controlador/data.db"
+  }
+}

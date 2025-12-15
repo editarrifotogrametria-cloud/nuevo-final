@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MINI CONTROLADOR - Panel GNSS</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* ============================================================================ */
+        /* VARIABLES CSS */
+        /* ============================================================================ */
+        :root {
+            --color-primary: #2196F3;
+            --color-secondary: #4CAF50;
+            --color-warning: #FF9800;
+            --color-error: #F44336;
+            --color-rtk-fixed: #4CAF50;
+            --color-rtk-float: #FF9800;
+            --color-dgps: #2196F3;
+            --color-single: #F44336;
+            --color-background: #0a0e27;
+            --color-surface: #1a1f3a;
+            --color-surface-light: #252b47;
+            --color-text: #ffffff;
+            --color-text-secondary: #b0bec5;
+            --color-border: #2c3454;
+        }
+
+        /* ============================================================================ */
+        /* RESET Y BASE */
+        /* ============================================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================================ */
+        /* LAYOUT */
+        /* ============================================================================ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .header {
+            background: var(--color-surface);
+            padding: 1rem;
+            border-bottom: 2px solid var(--color-primary);
+            margin-bottom: 1rem;
+            border-radius: 8px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-status {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.online {
+            background-color: var(--color-secondary);
+        }
+
+        .status-indicator.offline {
+            background-color: var(--color-error);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ============================================================================ */
+        /* GRID LAYOUT */
+        /* ============================================================================ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-content {
+            color: var(--color-text-secondary);
+        }
+
+        /* ============================================================================ */
+        /* STATUS CARDS */
+        /* ============================================================================ */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .status-label {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .status-value.large {
+            font-size: 2rem;
+        }
+
+        .status-value.small {
+            font-size: 1rem;
+        }
+
+        /* Fix type badge */
+        .fix-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .fix-badge.rtk-fixed {
+            background-color: var(--color-rtk-fixed);
+            color: white;
+        }
+
+        .fix-badge.rtk-float {
+            background-color: var(--color-rtk-float);
+            color: white;
+        }
+
+        .fix-badge.dgps {
+            background-color: var(--color-dgps);
+            color: white;
+        }
+
+        .fix-badge.single {
+            background-color: var(--color-single);
+            color: white;
+        }
+
+        .fix-badge.no-fix {
+            background-color: var(--color-text-secondary);
+            color: white;
+        }
+
+        /* ============================================================================ */
+        /* MAPA */
+        /* ============================================================================ */
+        #map {
+            height: 400px;
+            border-radius: 8px;
+            z-index: 1;
+        }
+
+        /* ============================================================================ */
+        /* GRÁFICAS */
+        /* ============================================================================ */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* ============================================================================ */
+        /* SKY PLOT */
+        /* ============================================================================ */
+        .sky-plot-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sky-plot {
+            width: 280px;
+            height: 280px;
+            position: relative;
+        }
+
+        /* ============================================================================ */
+        /* CONSOLE LOG */
+        /* ============================================================================ */
+        .console-log {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            padding: 1rem;
+            height: 200px;
+            overflow-y: auto;
+            border-radius: 4px;
+            border: 1px solid var(--color-border);
+        }
+
+        .console-log-line {
+            margin-bottom: 0.25rem;
+        }
+
+        .console-log-line .timestamp {
+            color: #888;
+        }
+
+        /* ============================================================================ */
+        /* RESPONSIVE */
+        /* ============================================================================ */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.25rem;
+            }
+
+            .status-value {
+                font-size: 1.25rem;
+            }
+
+            .status-value.large {
+                font-size: 1.5rem;
+            }
+
+            #map {
+                height: 300px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* ============================================================================ */
+        /* LOADING SPINNER */
+        /* ============================================================================ */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--color-primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ============================================================================ */
+        /* BUTTONS */
+        /* ============================================================================ */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1976D2;
+        }
+
+        .btn-secondary {
+            background-color: var(--color-secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #388E3C;
+        }
+
+        /* ============================================================================ */
+        /* UTILIDADES */
+        /* ============================================================================ */
+        .mt-1 {
+            margin-top: 1rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                🛰️ MINI CONTROLADOR - GNSS
+            </h1>
+            <div class="header-status">
+                <span>
+                    <span id="status-indicator" class="status-indicator offline"></span>
+                    <span id="connection-status">Conectando...</span>
+                </span>
+                <span id="device-info"></span>
+                <span id="uptime"></span>
+            </div>
+        </div>
+
+        <!-- STATUS CARDS -->
+        <div class="grid">
+            <!-- GNSS Status -->
+            <div class="card">
+                <div class="card-title">📍 Estado GNSS</div>
+                <div class="card-content">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Fix</span>
+                            <span id="fix-type" class="fix-badge no-fix">NO FIX</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Satélites</span>
+                            <span id="satellites" class="status-value">--/--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">HDOP</span>
+                            <span id="hdop" class="status-value small">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Precisión H</span>
+                            <span id="accuracy-h" class="status-value small">-- cm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Position -->
+            <div class="card">
+                <div class="card-title">🌍 Posición</div>
+                <div class="card-content">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Latitud</span>
+                            <span id="latitude" class="status-value small">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Longitud</span>
+                            <span id="longitude" class="status-value small">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Altitud</span>
+                            <span id="altitude" class="status-value small">-- m</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Velocidad</span>
+                            <span id="speed" class="status-value small">-- km/h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System -->
+            <div class="card">
+                <div class="card-title">💻 Sistema</div>
+                <div class="card-content">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">CPU</span>
+                            <span id="cpu" class="status-value small">--%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Memoria</span>
+                            <span id="memory" class="status-value small">--%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Temp</span>
+                            <span id="temperature" class="status-value small">--°C</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Red</span>
+                            <span id="network" class="status-value small">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAP -->
+        <div class="card">
+            <div class="card-title">🗺️ Mapa</div>
+            <div id="map"></div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="grid">
+            <!-- Satellites Chart -->
+            <div class="card">
+                <div class="card-title">📊 SNR Satélites</div>
+                <div class="chart-container">
+                    <canvas id="satellites-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Accuracy Chart -->
+            <div class="card">
+                <div class="card-title">📈 Precisión en Tiempo Real</div>
+                <div class="chart-container">
+                    <canvas id="accuracy-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sky Plot -->
+        <div class="card">
+            <div class="card-title">🌌 Sky Plot</div>
+            <div class="sky-plot-container">
+                <canvas id="sky-plot" width="280" height="280"></canvas>
+            </div>
+        </div>
+
+        <!-- Console Log -->
+        <div class="card">
+            <div class="card-title">📋 Log de Eventos</div>
+            <div id="console-log" class="console-log"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================================================
+        // CONFIGURACIÓN
+        // ========================================================================
+        const CONFIG = {
+            wsUrl: `ws://${window.location.host}/ws`,
+            apiUrl: `http://${window.location.host}/api`,
+            maxLogLines: 100,
+            maxHistoryPoints: 100
+        };
+
+        // ========================================================================
+        // ESTADO GLOBAL
+        // ========================================================================
+        const STATE = {
+            ws: null,
+            connected: false,
+            gnssData: {},
+            satellitesData: {},
+            systemData: {},
+            positionHistory: [],
+            reconnectAttempts: 0,
+            maxReconnectAttempts: 5
+        };
+
+        // ========================================================================
+        // MAPA LEAFLET
+        // ========================================================================
+        let map = null;
+        let marker = null;
+        let pathPolyline = null;
+
+        function initMap() {
+            map = L.map('map').setView([-33.4489, -70.6693], 18);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Icono personalizado
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background-color: #4CAF50; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white;"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            marker = L.marker([-33.4489, -70.6693], { icon: customIcon }).addTo(map);
+
+            pathPolyline = L.polyline([], {
+                color: '#2196F3',
+                weight: 3,
+                opacity: 0.7
+            }).addTo(map);
+        }
+
+        function updateMap(lat, lon) {
+            if (!map || !marker) return;
+
+            const latLng = [lat, lon];
+            marker.setLatLng(latLng);
+            map.panTo(latLng);
+
+            // Agregar al path
+            STATE.positionHistory.push(latLng);
+            if (STATE.positionHistory.length > CONFIG.maxHistoryPoints) {
+                STATE.positionHistory.shift();
+            }
+            pathPolyline.setLatLngs(STATE.positionHistory);
+        }
+
+        // ========================================================================
+        // GRÁFICAS CHART.JS
+        // ========================================================================
+        let satellitesChart = null;
+        let accuracyChart = null;
+
+        function initCharts() {
+            // Gráfica de satélites
+            const satCtx = document.getElementById('satellites-chart').getContext('2d');
+            satellitesChart = new Chart(satCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'SNR (dB-Hz)',
+                        data: [],
+                        backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                        borderColor: 'rgba(33, 150, 243, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 60,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#b0bec5' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#b0bec5' }
+                        }
+                    }
+                }
+            });
+
+            // Gráfica de precisión
+            const accCtx = document.getElementById('accuracy-chart').getContext('2d');
+            accuracyChart = new Chart(accCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Precisión Horizontal (cm)',
+                            data: [],
+                            borderColor: 'rgba(76, 175, 80, 1)',
+                            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Precisión Vertical (cm)',
+                            data: [],
+                            borderColor: 'rgba(255, 152, 0, 1)',
+                            backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#b0bec5' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#b0bec5' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#b0bec5', display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSatellitesChart(satellites) {
+            if (!satellitesChart || !satellites) return;
+
+            const labels = satellites.map(s => `${s.constellation} ${s.prn}`);
+            const data = satellites.map(s => s.snr);
+
+            satellitesChart.data.labels = labels.slice(0, 15); // Mostrar primeros 15
+            satellitesChart.data.datasets[0].data = data.slice(0, 15);
+            satellitesChart.update('none'); // Sin animación para mejor performance
+        }
+
+        function updateAccuracyChart(accuracyH, accuracyV) {
+            if (!accuracyChart) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+
+            accuracyChart.data.labels.push(timestamp);
+            accuracyChart.data.datasets[0].data.push(accuracyH * 100); // Convertir a cm
+            accuracyChart.data.datasets[1].data.push(accuracyV * 100);
+
+            // Limitar puntos
+            if (accuracyChart.data.labels.length > 30) {
+                accuracyChart.data.labels.shift();
+                accuracyChart.data.datasets[0].data.shift();
+                accuracyChart.data.datasets[1].data.shift();
+            }
+
+            accuracyChart.update('none');
+        }
+
+        // ========================================================================
+        // SKY PLOT
+        // ========================================================================
+        function drawSkyPlot(satellites) {
+            const canvas = document.getElementById('sky-plot');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 130;
+
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar círculos concéntricos
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+
+            for (let r = radius; r > 0; r -= radius / 3) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+
+            // Dibujar ejes
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - radius);
+            ctx.lineTo(centerX, centerY + radius);
+            ctx.moveTo(centerX - radius, centerY);
+            ctx.lineTo(centerX + radius, centerY);
+            ctx.stroke();
+
+            // Etiquetas
+            ctx.fillStyle = '#b0bec5';
+            ctx.font = '12px sans-serif';
+            ctx.fillText('N', centerX - 5, centerY - radius - 5);
+            ctx.fillText('S', centerX - 5, centerY + radius + 15);
+            ctx.fillText('E', centerX + radius + 5, centerY + 5);
+            ctx.fillText('W', centerX - radius - 15, centerY + 5);
+
+            // Dibujar satélites
+            if (!satellites || !satellites.length) return;
+
+            satellites.forEach(sat => {
+                const elevation = sat.elevation;
+                const azimuth = sat.azimuth;
+                const snr = sat.snr;
+
+                // Convertir coordenadas polares a cartesianas
+                const r = radius * (1 - elevation / 90);
+                const theta = (azimuth - 90) * Math.PI / 180;
+                const x = centerX + r * Math.cos(theta);
+                const y = centerY + r * Math.sin(theta);
+
+                // Color basado en constelación
+                let color = '#2196F3'; // GPS
+                if (sat.constellation === 'GLONASS') color = '#FF9800';
+                if (sat.constellation === 'GALILEO') color = '#9C27B0';
+                if (sat.constellation === 'BEIDOU') color = '#F44336';
+
+                // Dibujar punto
+                ctx.fillStyle = sat.used ? color : 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Dibujar PRN
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px sans-serif';
+                ctx.fillText(sat.prn, x + 7, y + 4);
+            });
+        }
+
+        // ========================================================================
+        // CONSOLE LOG
+        // ========================================================================
+        function addLog(message, type = 'info') {
+            const consoleLog = document.getElementById('console-log');
+            if (!consoleLog) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'console-log-line';
+
+            let color = '#00ff00';
+            if (type === 'warning') color = '#ff9800';
+            if (type === 'error') color = '#f44336';
+
+            line.innerHTML = `<span class="timestamp">[${timestamp}]</span> <span style="color: ${color}">${message}</span>`;
+
+            consoleLog.appendChild(line);
+
+            // Limitar líneas
+            while (consoleLog.children.length > CONFIG.maxLogLines) {
+                consoleLog.removeChild(consoleLog.firstChild);
+            }
+
+            // Auto-scroll
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        // ========================================================================
+        // UI UPDATES
+        // ========================================================================
+        function updateUI() {
+            // Status indicator
+            const statusIndicator = document.getElementById('status-indicator');
+            const connectionStatus = document.getElementById('connection-status');
+
+            if (STATE.connected) {
+                statusIndicator.className = 'status-indicator online';
+                connectionStatus.textContent = 'Conectado';
+            } else {
+                statusIndicator.className = 'status-indicator offline';
+                connectionStatus.textContent = 'Desconectado';
+            }
+
+            // GNSS data
+            if (STATE.gnssData) {
+                const data = STATE.gnssData;
+
+                // Fix type
+                const fixType = document.getElementById('fix-type');
+                if (fixType && data.fix_type) {
+                    fixType.textContent = data.fix_type.replace('_', ' ');
+                    fixType.className = 'fix-badge ' + data.fix_type.toLowerCase().replace('_', '-');
+                }
+
+                // Satellites
+                const satellites = document.getElementById('satellites');
+                if (satellites && data.satellites_used !== undefined) {
+                    satellites.textContent = `${data.satellites_used}/${data.satellites_visible || 0}`;
+                }
+
+                // HDOP
+                const hdop = document.getElementById('hdop');
+                if (hdop && data.hdop !== undefined) {
+                    hdop.textContent = data.hdop.toFixed(1);
+                }
+
+                // Accuracy
+                const accuracyH = document.getElementById('accuracy-h');
+                if (accuracyH && data.accuracy_horizontal !== undefined) {
+                    accuracyH.textContent = `${(data.accuracy_horizontal * 100).toFixed(1)} cm`;
+                }
+
+                // Position
+                const latitude = document.getElementById('latitude');
+                const longitude = document.getElementById('longitude');
+                const altitude = document.getElementById('altitude');
+                const speed = document.getElementById('speed');
+
+                if (latitude && data.latitude !== undefined) {
+                    latitude.textContent = data.latitude.toFixed(6) + '°';
+                }
+                if (longitude && data.longitude !== undefined) {
+                    longitude.textContent = data.longitude.toFixed(6) + '°';
+                }
+                if (altitude && data.altitude !== undefined) {
+                    altitude.textContent = `${data.altitude.toFixed(1)} m`;
+                }
+                if (speed && data.speed_kmh !== undefined) {
+                    speed.textContent = `${data.speed_kmh.toFixed(1)} km/h`;
+                }
+
+                // Actualizar mapa
+                if (data.latitude && data.longitude) {
+                    updateMap(data.latitude, data.longitude);
+                }
+
+                // Actualizar gráfica de precisión
+                if (data.accuracy_horizontal && data.accuracy_vertical) {
+                    updateAccuracyChart(data.accuracy_horizontal, data.accuracy_vertical);
+                }
+            }
+
+            // System data
+            if (STATE.systemData) {
+                const data = STATE.systemData;
+
+                const cpu = document.getElementById('cpu');
+                const memory = document.getElementById('memory');
+                const temperature = document.getElementById('temperature');
+
+                if (cpu && data.cpu_percent !== undefined) {
+                    cpu.textContent = `${data.cpu_percent}%`;
+                }
+                if (memory && data.memory_percent !== undefined) {
+                    memory.textContent = `${data.memory_percent}%`;
+                }
+                if (temperature && data.temperature_celsius !== undefined) {
+                    temperature.textContent = `${data.temperature_celsius}°C`;
+                }
+            }
+
+            // Satellites
+            if (STATE.satellitesData && STATE.satellitesData.satellites) {
+                updateSatellitesChart(STATE.satellitesData.satellites);
+                drawSkyPlot(STATE.satellitesData.satellites);
+            }
+        }
+
+        // ========================================================================
+        // WEBSOCKET
+        // ========================================================================
+        function connectWebSocket() {
+            addLog('Conectando a WebSocket...', 'info');
+
+            STATE.ws = new WebSocket(CONFIG.wsUrl);
+
+            STATE.ws.onopen = () => {
+                addLog('WebSocket conectado', 'info');
+                STATE.connected = true;
+                STATE.reconnectAttempts = 0;
+                updateUI();
+
+                // Suscribirse a canales
+                STATE.ws.send(JSON.stringify({
+                    type: 'subscribe',
+                    channels: ['gnss', 'satellites', 'system']
+                }));
+            };
+
+            STATE.ws.onclose = () => {
+                addLog('WebSocket desconectado', 'warning');
+                STATE.connected = false;
+                updateUI();
+
+                // Reintentar conexión
+                if (STATE.reconnectAttempts < STATE.maxReconnectAttempts) {
+                    STATE.reconnectAttempts++;
+                    const delay = 2000 * STATE.reconnectAttempts;
+                    addLog(`Reintentando en ${delay / 1000}s...`, 'info');
+                    setTimeout(connectWebSocket, delay);
+                }
+            };
+
+            STATE.ws.onerror = (error) => {
+                addLog('Error en WebSocket', 'error');
+                console.error('WebSocket error:', error);
+            };
+
+            STATE.ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    handleWebSocketMessage(message);
+                } catch (error) {
+                    console.error('Error parseando mensaje:', error);
+                }
+            };
+        }
+
+        function handleWebSocketMessage(message) {
+            switch (message.type) {
+                case 'gnss_update':
+                    STATE.gnssData = message.data;
+                    updateUI();
+                    break;
+
+                case 'satellites_update':
+                    STATE.satellitesData = message.data;
+                    updateUI();
+                    break;
+
+                case 'system_update':
+                    STATE.systemData = message.data;
+                    updateUI();
+                    break;
+
+                case 'pong':
+                    // Respuesta a ping
+                    break;
+
+                case 'error':
+                    addLog(`Error: ${message.error.message}`, 'error');
+                    break;
+
+                default:
+                    console.log('Mensaje desconocido:', message);
+            }
+        }
+
+        // ========================================================================
+        // INICIALIZACIÓN
+        // ========================================================================
+        function init() {
+            addLog('Iniciando panel...', 'info');
+
+            // Inicializar mapa
+            initMap();
+            addLog('Mapa inicializado', 'info');
+
+            // Inicializar gráficas
+            initCharts();
+            addLog('Gráficas inicializadas', 'info');
+
+            // Conectar WebSocket
+            connectWebSocket();
+
+            // Cargar estado inicial vía API
+            loadInitialState();
+        }
+
+        async function loadInitialState() {
+            try {
+                const response = await fetch(`${CONFIG.apiUrl}/status`);
+                const data = await response.json();
+
+                addLog('Estado inicial cargado', 'info');
+
+                // Device info
+                if (data.device) {
+                    const deviceInfo = document.getElementById('device-info');
+                    deviceInfo.textContent = `${data.device.name} v${data.device.firmware_version}`;
+                }
+
+                // Uptime
+                if (data.uptime_seconds !== undefined) {
+                    const uptime = document.getElementById('uptime');
+                    const hours = Math.floor(data.uptime_seconds / 3600);
+                    const minutes = Math.floor((data.uptime_seconds % 3600) / 60);
+                    uptime.textContent = `Uptime: ${hours}h ${minutes}m`;
+                }
+
+                // GNSS
+                if (data.gnss) {
+                    STATE.gnssData = data.gnss;
+                }
+
+                // System
+                if (data.system) {
+                    STATE.systemData = data.system;
+                }
+
+                // Network
+                if (data.network) {
+                    const network = document.getElementById('network');
+                    network.textContent = data.network.wifi_ssid || data.network.interface || '--';
+                }
+
+                updateUI();
+
+            } catch (error) {
+                addLog(`Error cargando estado: ${error.message}`, 'error');
+            }
+        }
+
+        // Iniciar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // ========================================================================
+        // PING PERIÓDICO
+        // ========================================================================
+        setInterval(() => {
+            if (STATE.ws && STATE.ws.readyState === WebSocket.OPEN) {
+                STATE.ws.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000); // Cada 30 segundos
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# ============================================================================
+# MINI CONTROLADOR - BACKEND DEPENDENCIES
+# ============================================================================
+
+# FastAPI y servidor ASGI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# WebSockets
+websockets==12.0
+python-socketio==5.10.0
+
+# Comunicación serial (GNSS)
+pyserial==3.5
+
+# Monitoreo de sistema
+psutil==5.9.6
+
+# Utilidades
+python-dotenv==1.0.0
+pydantic==2.5.0
+
+# BLE/Bluetooth (opcional, según plataforma)
+# pybluez==0.23  # Para Linux con BlueZ
+# bleak==0.21.1  # Alternativa multiplataforma
+
+# Logging y debugging
+colorlog==6.8.0
+
+# Testing (opcional)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2  # Para testing de API
+
+# ============================================================================
+# NOTAS DE INSTALACIÓN
+# ============================================================================
+
+# En Raspberry Pi / Linux:
+# sudo apt-get install -y python3-dev bluetooth libbluetooth-dev
+# pip install pybluez
+
+# Para usar bleak (multiplataforma):
+# pip install bleak bleak-peripheral
+
+# Para producción, fijar versiones exactas:
+# pip freeze > requirements-frozen.txt

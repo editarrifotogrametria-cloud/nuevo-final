@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mini Controlador</string>
+    <string name="search_devices">Buscar Dispositivos</string>
+    <string name="scanning">Buscando dispositivos...</string>
+    <string name="no_devices_found">No se encontraron dispositivos</string>
+    <string name="connecting">Conectando...</string>
+    <string name="connected">Conectado</string>
+    <string name="error_connection">Error de conexión</string>
+    <string name="error_ble_not_supported">BLE no soportado</string>
+    <string name="error_bluetooth_disabled">Bluetooth deshabilitado</string>
+    <string name="error_permissions">Permisos requeridos</string>
+    <string name="loading_panel">Cargando panel...</string>
+</resources>
